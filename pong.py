@@ -75,7 +75,7 @@ class Game(tk.Frame):
                 self.after(1000, self.setup_game)
         else:                                               # regular loop...
             self.ball.update()
-            self.after(50, self.game_loop)
+            self.after(25, self.game_loop)
             
     def check_collisions(self):
         ball_coords = self.ball.get_position()
@@ -101,7 +101,7 @@ class Ball(GameObject):
     def __init__(self, canvas, x, y):
         self.radius = 10
         self.direction = [1, -1]
-        self.speed = 10
+        self.speed = 5
         item = canvas.create_oval(x-self.radius, y-self.radius, x+self.radius, y+self.radius, fill='white')
         super(Ball, self).__init__(canvas, item)
 
