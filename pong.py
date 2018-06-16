@@ -42,7 +42,7 @@ class Game(tk.Frame):
         return self.canvas.create_text(x, y, text=str, font=font)
     
     def update_lives_text(self):
-        str = 'Lives left : %s' % self.lives
+        str = 'Lives : %s' % self.lives
         if self.hud is None:
             self.hud = self.draw_text(50, 20, str, 15)
         else:
@@ -75,7 +75,7 @@ class Game(tk.Frame):
                 self.after(1000, self.setup_game)
         else:                                               # regular loop...
             self.ball.update()
-            self.after(25, self.game_loop)
+            self.after(20, self.game_loop)                  # 60 frame per second (refresh every 15ms)
             
     def check_collisions(self):
         ball_coords = self.ball.get_position()
@@ -100,8 +100,8 @@ class GameObject(object):
 class Ball(GameObject):
     def __init__(self, canvas, x, y):
         self.radius = 10
-        self.direction = [1, -1]
-        self.speed = 5
+        self.direction = [0, -1]
+        self.speed = 3
         item = canvas.create_oval(x-self.radius, y-self.radius, x+self.radius, y+self.radius, fill='white')
         super(Ball, self).__init__(canvas, item)
 
@@ -120,19 +120,45 @@ class Ball(GameObject):
     # Computes the output a collision with multiple objects
     def collide(self, game_objects):
         coords = self.get_position()
-        x = (coords[0] + coords[2]) * 0.5
-        if (len(game_objects) > 1): # if collision with multiple objects, we assume it is from below or above
+        x = (coords[0] + coords[2]) * 0.5           # ball center in absolute coordinates
+        if (len(game_objects) > 1):                 # if collision with multiple objects, we assume it is from below or above
             self.direction[1] *= -1
         elif (len(game_objects) == 1):
             game_object = game_objects[0]
-            coords = game_object.get_position()
-            if (x > coords[2]):             # object touched on the right side
+            obj_coords = game_object.get_position()
+            if (x > obj_coords[2]):                 # object touched on the right side
                 self.direction[0] = 1
-            elif x < coords[0]:             # object touched on the left side
+            elif x < obj_coords[0]:                 # object touched on the left side
                 self.direction[0] = -1
-            else:                           # object touched on the upper or lower side
+            elif isinstance(game_object, Brick):    # object touched the upper or lower side of a brick
                 self.direction[1] *= -1
-        
+            else:                                   # object touched the upper or lower side of the paddle
+                self.direction[1] *= -1
+                # if the touch is in the center, we only need to invert the second component of the vector...
+                # if the touch is on the left we increase the left 
+                paddle_center_x = (obj_coords[0] + obj_coords[2]) * 0.5
+                max_left_x = paddle_center_x - 10
+                min_right_x = paddle_center_x + 10
+                if (x < max_left_x):               # increase the angle to the left
+                    if (self.direction[0] == -2 or self.direction[0] == -1):
+                        self.direction[0] = -2
+                    elif (self.direction[0] == 0):
+                        self.direction[0] = -1
+                    elif (self.direction[0] == 1):
+                        self.direction[0] = 0
+                    elif (self.direction[0] == 2):
+                        self.direction[0] = 1
+                elif (x > min_right_x):            # increase the angle to the right
+                    if (self.direction[0] == 2 or self.direction[0] == 1):
+                        self.direction[0] = 2
+                    elif (self.direction[0] == 0):
+                        self.direction[0] = 1
+                    elif (self.direction[0] == -1):
+                        self.direction[0] = 0
+                    elif (self.direction[0] == -2):
+                        self.direction[0] = -1
+                # if touch in the middle we do not change de x component
+                
         for game_object in game_objects:
             if isinstance(game_object, Brick):
                 game_object.hit()
