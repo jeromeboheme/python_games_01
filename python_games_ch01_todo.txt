@@ -1,0 +1,12 @@
+0.2 - Ball angle control
+o add simple angle control
+o divide into separate files
++ improve angle control with continuous angle setting
+
+0.3 - Difficulty levels
++ 
+
+--------------------------------
+
+0.1 - Initial release
+o Initial release, same as book
